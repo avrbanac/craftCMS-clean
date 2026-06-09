@@ -1,0 +1,84 @@
+# =============================================================================
+# CraftCMS PRODUCTION stack (standalone — does NOT extend docker-compose.yml).
+#
+# Differences from the dev stack:
+#   * image built from the `prod` target: app code baked in, composer --no-dev,
+#     opcache timestamp checks off, open_basedir hardening.
+#   * NO bind mount — the container is immutable and self-contained.
+#   * the PostgreSQL port is NOT published to the host.
+#   * production secrets are REQUIRED (the stack refuses to start without them).
+#   * its own database volume (craftcms-clean-prod_craft-pgdata), separate from
+#     the dev database.
+#
+# Usage:
+#   # 1. Install Craft first (via the dev stack) so ./craftcms has code to bake.
+#   # 2. Set required secrets in .env:  CRAFT_SECURITY_KEY + a strong POSTGRES_PASSWORD
+#   docker compose -f docker-compose.prod.yml build
+#   docker compose -f docker-compose.prod.yml up -d
+# =============================================================================
+
+name: craftcms-clean-prod
+
+services:
+  craft:
+    build:
+      context: .
+      dockerfile: craftcms-nginx/Dockerfile
+      target: prod
+      args:
+        php_version: ${PHP_VERSION:-8.4}
+        userid: ${APP_UID:-1000}
+        groupid: ${APP_GID:-1000}
+    image: craftcms-clean/nginx:prod
+    container_name: craftcms-clean-web-prod
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    environment:
+      # Production behavior — admin changes disabled, dev mode off.
+      CRAFT_ENVIRONMENT: production
+      CRAFT_DEV_MODE: "false"
+      CRAFT_ALLOW_ADMIN_CHANGES: "false"
+      # Required: copy the value Craft generated into craftcms/.env during setup.
+      CRAFT_SECURITY_KEY: ${CRAFT_SECURITY_KEY:?set CRAFT_SECURITY_KEY in .env}
+      # Database connection.
+      CRAFT_DB_DRIVER: pgsql
+      CRAFT_DB_SERVER: db
+      CRAFT_DB_PORT: "5432"
+      CRAFT_DB_DATABASE: ${POSTGRES_DB:-craftcms}
+      CRAFT_DB_USER: ${POSTGRES_USER:-craftcms}
+      CRAFT_DB_PASSWORD: ${POSTGRES_PASSWORD:?set a strong POSTGRES_PASSWORD in .env}
+      CRAFT_DB_SCHEMA: public
+      CRAFT_DB_TABLE_PREFIX: ""
+    networks:
+      - craftnet
+
+  db:
+    image: postgres:16
+    container_name: craftcms-clean-db-prod
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-craftcms}
+      POSTGRES_USER: ${POSTGRES_USER:-craftcms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set a strong POSTGRES_PASSWORD in .env}
+    # NOTE: the DB port is intentionally NOT published to the host in production.
+    volumes:
+      - craft-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-craftcms} -d ${POSTGRES_DB:-craftcms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - craftnet
+
+volumes:
+  craft-pgdata:
+
+networks:
+  craftnet:
+    driver: bridge

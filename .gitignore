@@ -1,33 +1,33 @@
 # ---------------------------------------------------------------------------
-# CraftCMS
+# CraftCMS  (the Craft project lives in ./craftcms, bind-mounted to /app)
 # ---------------------------------------------------------------------------
 # Dependencies (re-installable via composer install)
-/vendor
+/craftcms/vendor
 
-# Environment / secrets — never commit these
+# Environment / secrets — never commit these.
+# Matches both the root compose .env and Craft's own craftcms/.env.
 .env
 .env.*
 !.env.example
 !.env.example.*
 
 # Craft runtime storage (logs, caches, compiled templates, etc.)
-/storage/*
-!/storage/.gitkeep
-# If you keep a storage dir, keep the folder but ignore its contents:
-/storage/runtime/*
-/storage/logs/*
-/storage/backups/*
-/storage/config-deltas/*
+/craftcms/storage/*
+!/craftcms/storage/.gitkeep
+/craftcms/storage/runtime/*
+/craftcms/storage/logs/*
+/craftcms/storage/backups/*
+/craftcms/storage/config-deltas/*
 
 # Compiled/published control panel & plugin resources
-/web/cpresources
+/craftcms/web/cpresources
 
 # Craft-generated asset transforms / image editor temp
-/web/imager
-/web/.transcoder
+/craftcms/web/imager
+/craftcms/web/.transcoder
 
 # License key (machine/install specific)
-/config/license.key
+/craftcms/config/license.key
 
 # ---------------------------------------------------------------------------
 # Composer
@@ -51,13 +51,14 @@ docker-compose.*.local.yml
 # ---------------------------------------------------------------------------
 # Node / front-end build (if you add a build pipeline later)
 # ---------------------------------------------------------------------------
-/node_modules
+/craftcms/node_modules
+node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-/web/dist
-/web/assets/build
+/craftcms/web/dist
+/craftcms/web/assets/build
 
 # ---------------------------------------------------------------------------
 # IntelliJ IDEA / JetBrains (PhpStorm, etc.)

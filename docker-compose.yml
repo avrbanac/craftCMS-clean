@@ -1,0 +1,80 @@
+# =============================================================================
+# CraftCMS local development stack
+#   craft  -> custom nginx + php-fpm image (./craftcms-nginx), PHP 8.4, uid 1000
+#   db     -> PostgreSQL, used by Craft
+#
+# Quick start:
+#   cp .env.example .env                 # adjust values if you like
+#   docker compose build                 # builds the craft image (uid/gid from .env)
+#   docker compose up -d                 # starts db + craft
+#
+# Install Craft into the (initially empty) ./craftcms folder:
+#   docker compose run --rm craft composer create-project craftcms/craft .
+#   docker compose run --rm craft php craft setup        # answer the DB prompts
+# Then browse http://localhost:8080  (control panel at /admin).
+# =============================================================================
+
+name: craftcms-clean
+
+services:
+  craft:
+    build:
+      context: .
+      dockerfile: craftcms-nginx/Dockerfile
+      target: dev
+      args:
+        php_version: ${PHP_VERSION:-8.4}
+        userid: ${HOST_UID:-1000}
+        groupid: ${HOST_GID:-1000}
+    image: craftcms-clean/nginx:dev
+    container_name: craftcms-clean-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8080}:8080"
+    volumes:
+      # Your Craft project lives here on the host — edit it directly in IntelliJ.
+      - ./craftcms:/app
+    environment:
+      # Craft reads these env vars for its database connection.
+      CRAFT_DB_DRIVER: pgsql
+      CRAFT_DB_SERVER: db
+      CRAFT_DB_PORT: "5432"
+      CRAFT_DB_DATABASE: ${POSTGRES_DB:-craftcms}
+      CRAFT_DB_USER: ${POSTGRES_USER:-craftcms}
+      CRAFT_DB_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      CRAFT_DB_SCHEMA: public
+      CRAFT_DB_TABLE_PREFIX: ""
+    networks:
+      - craftnet
+
+  db:
+    image: postgres:16
+    container_name: craftcms-clean-db
+    restart: unless-stopped
+    shm_size: 128mb
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-craftcms}
+      POSTGRES_USER: ${POSTGRES_USER:-craftcms}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+    ports:
+      # Exposed so you can connect from the host (e.g. IntelliJ DB tools).
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - craft-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-craftcms} -d ${POSTGRES_DB:-craftcms}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - craftnet
+
+volumes:
+  craft-pgdata:
+
+networks:
+  craftnet:
+    driver: bridge
