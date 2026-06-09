@@ -1,0 +1,103 @@
+# ---------------------------------------------------------------------------
+# CraftCMS
+# ---------------------------------------------------------------------------
+# Dependencies (re-installable via composer install)
+/vendor
+
+# Environment / secrets — never commit these
+.env
+.env.*
+!.env.example
+!.env.example.*
+
+# Craft runtime storage (logs, caches, compiled templates, etc.)
+/storage/*
+!/storage/.gitkeep
+# If you keep a storage dir, keep the folder but ignore its contents:
+/storage/runtime/*
+/storage/logs/*
+/storage/backups/*
+/storage/config-deltas/*
+
+# Compiled/published control panel & plugin resources
+/web/cpresources
+
+# Craft-generated asset transforms / image editor temp
+/web/imager
+/web/.transcoder
+
+# License key (machine/install specific)
+/config/license.key
+
+# ---------------------------------------------------------------------------
+# Composer
+# ---------------------------------------------------------------------------
+# NOTE: composer.lock SHOULD be committed for applications (Craft recommends it).
+# Uncomment the next line only if this becomes a distributable package/library.
+# composer.lock
+
+# ---------------------------------------------------------------------------
+# Docker
+# ---------------------------------------------------------------------------
+# Local override / secret compose files
+docker-compose.override.yml
+docker-compose.*.local.yml
+
+# Persisted volume data if bind-mounted into the repo
+/.docker/data
+/docker/data
+/data
+
+# ---------------------------------------------------------------------------
+# Node / front-end build (if you add a build pipeline later)
+# ---------------------------------------------------------------------------
+/node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+/web/dist
+/web/assets/build
+
+# ---------------------------------------------------------------------------
+# IntelliJ IDEA / JetBrains (PhpStorm, etc.)
+# ---------------------------------------------------------------------------
+# Ignore the whole IDE folder except a few share-worthy files.
+/.idea/*
+# Keep these if you want to share project-level config with the team:
+!/.idea/runConfigurations
+!/.idea/codeStyles
+!/.idea/inspectionProfiles
+
+# JetBrains per-user / generated files (covered by /.idea/* above, listed for clarity)
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/usage.statistics.xml
+.idea/shelf
+.idea/dictionaries
+.idea/dataSources
+.idea/dataSources.local.xml
+.idea/sqlDataSources.xml
+.idea/dynamic.xml
+.idea/*.iml
+*.iml
+*.ipr
+*.iws
+
+# JetBrains fleet / other
+.fleet
+
+# ---------------------------------------------------------------------------
+# OS / editor cruft
+# ---------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+*~
+*.swp
+*.swo
