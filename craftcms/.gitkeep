@@ -1,3 +1,0 @@
-# This folder is bind-mounted into the craft container at /app.
-# Install CraftCMS here, e.g.:
-#   docker compose run --rm craft composer create-project craftcms/craft .

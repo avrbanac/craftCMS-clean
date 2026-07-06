@@ -118,7 +118,7 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 RUN userdel ubuntu 2>/dev/null || true \
     && groupdel ubuntu 2>/dev/null || true \
     && groupadd -g ${groupid} ${groupname} \
-    && useradd --uid ${userid} --gid ${groupid} --home-dir ${appdir} --no-log-init --system ${username} \
+    && useradd --uid ${userid} --gid ${groupid} --home-dir /home/${username} --create-home --no-log-init --system ${username} \
     && mkdir -p ${appdir} && chown -R ${userid}:${groupid} ${appdir}
 
 # -------------------------
@@ -129,6 +129,8 @@ COPY craftcms-nginx/etc/supervisord.d /etc/supervisord.d
 COPY craftcms-nginx/etc/php-fpm/php-fpm.conf /etc/php-fpm.conf
 COPY craftcms-nginx/etc/php.d/60-craftcms.ini /etc/php.d/60-craftcms.ini
 COPY craftcms-nginx/etc/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY craftcms-nginx/etc/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 # Make `/usr/sbin/php-fpm` resolve to our version.
 RUN update-alternatives --install /usr/sbin/php-fpm php-fpm /usr/sbin/php-fpm${php_version} 1
@@ -142,7 +144,7 @@ RUN install -d -o ${userid} -g ${groupid} /var/run/php /run \
 
 WORKDIR ${appdir}
 EXPOSE 8080
-ENTRYPOINT ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 
 
 # =============================================================================
